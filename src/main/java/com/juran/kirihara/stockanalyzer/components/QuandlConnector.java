@@ -3,8 +3,8 @@ package com.juran.kirihara.stockanalyzer.components;
 
 import com.juran.kirihara.stockanalyzer.Constants;
 import com.juran.kirihara.stockanalyzer.dto.QuandlRequest;
-import com.juran.kirihara.stockanalyzer.models.QuandleTableModel;
-import com.juran.kirihara.stockanalyzer.models.QuandleTableModelDeserializer;
+import com.juran.kirihara.stockanalyzer.models.QuandlTableModel;
+import com.juran.kirihara.stockanalyzer.models.QuandlTableModelDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +12,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class QuandlConnector {
-    private static Logger logger = LoggerFactory.getLogger(QuandleTableModelDeserializer.class);
+    private static Logger logger = LoggerFactory.getLogger(QuandlTableModelDeserializer.class);
     private String apiToken;
     private String wikiApiUrl;
     private RestTemplate quandlRestRequestBuilder;
@@ -23,7 +23,7 @@ public class QuandlConnector {
         this.wikiApiUrl = url;
     }
 
-    public ResponseEntity<QuandleTableModel> getWikiTableResponse(QuandlRequest request) {
+    public ResponseEntity<QuandlTableModel> getWikiTableResponse(QuandlRequest request) {
         try {
             UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(this.wikiApiUrl);
             String tickers = String.join(",", request.getTickers());
@@ -36,10 +36,10 @@ public class QuandlConnector {
             }
             builder.queryParam("api_key", this.apiToken);
 
-            return this.quandlRestRequestBuilder.getForEntity(builder.toUriString(), QuandleTableModel.class);
+            return this.quandlRestRequestBuilder.getForEntity(builder.toUriString(), QuandlTableModel.class);
 
         } catch (Exception e) {
-            QuandleTableModel error = new QuandleTableModel();
+            QuandlTableModel error = new QuandlTableModel();
             error.setError(e.getMessage());
             logger.error(e.getMessage());
             return ResponseEntity.badRequest().body(error);

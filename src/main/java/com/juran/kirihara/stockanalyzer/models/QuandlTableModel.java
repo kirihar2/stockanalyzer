@@ -5,29 +5,29 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.ArrayList;
 import java.util.List;
 
-@JsonDeserialize(using = QuandleTableModelDeserializer.class)
-public class QuandleTableModel {
-    private List<QuandleTableEntry> entries;
+@JsonDeserialize(using = QuandlTableModelDeserializer.class)
+public class QuandlTableModel {
+    private List<QuandlTableEntry> entries;
     private String error;
 
-    public QuandleTableModel() {
+    public QuandlTableModel() {
         super();
     }
 
-    public QuandleTableModel(QuandleTableModel model) {
+    public QuandlTableModel(QuandlTableModel model) {
         setEntries(model.entries);
         setError(model.error);
     }
 
-    public QuandleTableModel(List<QuandleTableEntry> entries) {
+    public QuandlTableModel(List<QuandlTableEntry> entries) {
         setEntries(entries);
     }
 
-    public List<QuandleTableEntry> getEntries() {
+    public List<QuandlTableEntry> getEntries() {
         return entries;
     }
 
-    public void setEntries(List<QuandleTableEntry> entries) {
+    public void setEntries(List<QuandlTableEntry> entries) {
         this.entries = new ArrayList<>(entries);
     }
 

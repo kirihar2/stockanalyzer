@@ -5,8 +5,8 @@ import com.juran.kirihara.stockanalyzer.components.QuandlConnector;
 import com.juran.kirihara.stockanalyzer.dto.*;
 import com.juran.kirihara.stockanalyzer.models.BusyDaysForTicker;
 import com.juran.kirihara.stockanalyzer.models.MaxDailyProfitFromQuandlTable;
-import com.juran.kirihara.stockanalyzer.models.QuandleTableEntry;
-import com.juran.kirihara.stockanalyzer.models.QuandleTableModel;
+import com.juran.kirihara.stockanalyzer.models.QuandlTableEntry;
+import com.juran.kirihara.stockanalyzer.models.QuandlTableModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ public class StockAnalyzerService {
     public WikiTableResponse getPrice(QuandlRequest request) {
 
         WikiTableResponse response = new WikiTableResponse();
-        ResponseEntity<QuandleTableModel> responseFromQuandl = quandlConnector.getWikiTableResponse(request);
+        ResponseEntity<QuandlTableModel> responseFromQuandl = quandlConnector.getWikiTableResponse(request);
         if (responseFromQuandl != null && responseFromQuandl.getBody().getError() != null &&
                 !responseFromQuandl.getBody().getError().isEmpty()) {
             String errorMessage = "Error in the api request call to quandl, check inner error";
@@ -43,7 +43,7 @@ public class StockAnalyzerService {
             logger.error(errorMessage);
             response.setError(errorMessage);
         }
-        response.setQuandleTableModel(responseFromQuandl.getBody());
+        response.setQuandlTableModel(responseFromQuandl.getBody());
         return response;
     }
 
@@ -51,7 +51,7 @@ public class StockAnalyzerService {
         WikiTableResponse wikiTableResponse =
                 getPrice(request);
         rethrowErrorThrownByQuandlApiIfExists(wikiTableResponse);
-        QuandleTableModel quandleTableModel = wikiTableResponse.getQuandleTableModel();
+        QuandlTableModel quandlTableModel = wikiTableResponse.getQuandlTableModel();
 
         /*
             Outer map is for the ticker symbol.
@@ -73,9 +73,9 @@ public class StockAnalyzerService {
         List<String> keys = new ArrayList<>();
         keys.add(Constants.OPEN_PRICE_KEY);
         keys.add(Constants.CLOSE_PRICE_KEY);
-        calculateRunningTotalForGivenKey(quandleTableModel, bucketForMonthsPerTicker, keys, Constants.formatMonth);
-//        if (quandleTableModel != null) {
-//            for (QuandleTableEntry entry : quandleTableModel.getEntries()) {
+        calculateRunningTotalForGivenKey(quandlTableModel, bucketForMonthsPerTicker, keys, Constants.formatMonth);
+//        if (quandlTableModel != null) {
+//            for (QuandlTableEntry entry : quandlTableModel.getEntries()) {
 //                String currentTicker = entry.getTicker();
 //                if (!bucketForMonthsPerTicker.containsKey(currentTicker)) {
 //                    bucketForMonthsPerTicker.put(currentTicker, new HashMap<>());
@@ -149,10 +149,10 @@ public class StockAnalyzerService {
         Map<String, Integer> tickersInTheResponse = new HashMap<>();
         WikiTableResponse wikiTableResponse = getPrice(request);
         rethrowErrorThrownByQuandlApiIfExists(wikiTableResponse);
-        QuandleTableModel quandleTableModel = wikiTableResponse.getQuandleTableModel();
+        QuandlTableModel quandlTableModel = wikiTableResponse.getQuandlTableModel();
 
-        if (quandleTableModel != null) {
-            for (QuandleTableEntry entry : quandleTableModel.getEntries()) {
+        if (quandlTableModel != null) {
+            for (QuandlTableEntry entry : quandlTableModel.getEntries()) {
                 String currentTicker = entry.getTicker();
                 MaxDailyProfitResponse tickerMaxDailyProfit;
                 MaxDailyProfitFromQuandlTable maxDailyProfitToAdd = new MaxDailyProfitFromQuandlTable();
@@ -182,9 +182,9 @@ public class StockAnalyzerService {
         return response;
     }
 
-    private void calculateRunningTotalForGivenKey(QuandleTableModel quandleTableModel, Map<String, Map<String, Map<String, Double>>> bucketForGivenTicker, List<String> keysFromQuandleTableEntry, SimpleDateFormat dateFormat) {
-        if (quandleTableModel != null) {
-            for (QuandleTableEntry entry : quandleTableModel.getEntries()) {
+    private void calculateRunningTotalForGivenKey(QuandlTableModel quandlTableModel, Map<String, Map<String, Map<String, Double>>> bucketForGivenTicker, List<String> keysFromQuandleTableEntry, SimpleDateFormat dateFormat) {
+        if (quandlTableModel != null) {
+            for (QuandlTableEntry entry : quandlTableModel.getEntries()) {
                 String currentTicker = entry.getTicker();
                 if (!bucketForGivenTicker.containsKey(currentTicker)) {
                     bucketForGivenTicker.put(currentTicker, new HashMap<>());
@@ -209,7 +209,7 @@ public class StockAnalyzerService {
         }
     }
 
-    private Double getValueFromQuandlEntryGivenKey(QuandleTableEntry entry, String key) {
+    private Double getValueFromQuandlEntryGivenKey(QuandlTableEntry entry, String key) {
         switch (key) {
             case Constants.OPEN_PRICE_KEY:
                 return entry.getOpen();
@@ -231,14 +231,14 @@ public class StockAnalyzerService {
         rethrowErrorThrownByQuandlApiIfExists(wikiTableResponse);
         List<BusyDaysResponse> response = new ArrayList<>();
         Map<String, Integer> tickersInTheResponse = new HashMap<>();
-        QuandleTableModel quandleTableModel = wikiTableResponse.getQuandleTableModel();
+        QuandlTableModel quandlTableModel = wikiTableResponse.getQuandlTableModel();
         List<String> keysToCalculateAverage = new ArrayList<>();
         keysToCalculateAverage.add(Constants.VOLUME_KEY);
-        Map<String, Map<String, Double>> totalVolumeForTicker = calculateRunningTotalForEntireDate(quandleTableModel, keysToCalculateAverage);
+        Map<String, Map<String, Double>> totalVolumeForTicker = calculateRunningTotalForEntireDate(quandlTableModel, keysToCalculateAverage);
         Map<String, Map<String, Double>> averageVolumeForTicker = calculateAverages(totalVolumeForTicker, keysToCalculateAverage);
 
-        if (quandleTableModel != null) {
-            for (QuandleTableEntry entry : quandleTableModel.getEntries()) {
+        if (quandlTableModel != null) {
+            for (QuandlTableEntry entry : quandlTableModel.getEntries()) {
                 String currentTicker = entry.getTicker();
                 if (!averageVolumeForTicker.containsKey(currentTicker)) {
                     throw new Exception("Found an unknown key for ticker name when calculating busy days ");
@@ -277,10 +277,10 @@ public class StockAnalyzerService {
     }
 
 
-    private Map<String, Map<String, Double>> calculateRunningTotalForEntireDate(QuandleTableModel quandleTableModel, List<String> keysToCalculateAverage) {
+    private Map<String, Map<String, Double>> calculateRunningTotalForEntireDate(QuandlTableModel quandlTableModel, List<String> keysToCalculateAverage) {
         Map<String, Map<String, Double>> runningTotal = new HashMap<>();
-        if (quandleTableModel != null) {
-            for (QuandleTableEntry entry : quandleTableModel.getEntries()) {
+        if (quandlTableModel != null) {
+            for (QuandlTableEntry entry : quandlTableModel.getEntries()) {
                 String currentTicker = entry.getTicker();
                 Map<String, Double> runningTotalEntry;
                 if (!runningTotal.containsKey(currentTicker)) {
@@ -312,7 +312,7 @@ public class StockAnalyzerService {
     }
 
 
-    private Map<String, Double> calculateRunningTotal(Map<String, Double> originalTotal, List<String> keys, QuandleTableEntry entry) {
+    private Map<String, Double> calculateRunningTotal(Map<String, Double> originalTotal, List<String> keys, QuandlTableEntry entry) {
         Map<String, Double> runningTotal = new HashMap<>(originalTotal);
         double updatedCount = runningTotal.get(Constants.COUNT_KEY) + 1;
         runningTotal.put(Constants.COUNT_KEY, updatedCount);

@@ -9,12 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RunWith(JUnit4.class)
-public class QuandleTableModelTests {
+public class QuandlTableModelTests {
 
     @Test
     public void testListConstructorCreatesNewObject() {
-        List<QuandleTableEntry> temp = new ArrayList<>();
-        QuandleTableModel model = new QuandleTableModel(temp);
+        List<QuandlTableEntry> temp = new ArrayList<>();
+        QuandlTableModel model = new QuandlTableModel(temp);
         Assert.assertNotSame(model.getEntries(), temp);
 
     }

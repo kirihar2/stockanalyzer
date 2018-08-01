@@ -5,8 +5,8 @@ import com.juran.kirihara.stockanalyzer.components.QuandlConnector;
 import com.juran.kirihara.stockanalyzer.dto.*;
 import com.juran.kirihara.stockanalyzer.models.AverageMonthPriceFromQuandlTable;
 import com.juran.kirihara.stockanalyzer.models.BusyDaysForTicker;
-import com.juran.kirihara.stockanalyzer.models.QuandleTableEntry;
-import com.juran.kirihara.stockanalyzer.models.QuandleTableModel;
+import com.juran.kirihara.stockanalyzer.models.QuandlTableEntry;
+import com.juran.kirihara.stockanalyzer.models.QuandlTableModel;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,8 +34,8 @@ public class StockAnalyzerServiceTests {
     private StockAnalyzerService service = new StockAnalyzerService();
 
     private QuandlRequest request;
-    private QuandleTableModel mockQuandleTableModel;
-    private QuandleTableEntry mockQuandleTableEntry;
+    private QuandlTableModel mockQuandlTableModel;
+    private QuandlTableEntry mockQuandlTableEntry;
 
     @Before
     public void setUp() throws ParseException {
@@ -45,15 +45,15 @@ public class StockAnalyzerServiceTests {
         request.setTickers(tickers);
         request.setStartDate(Constants.formatWithDate.parse("2018-01-01"));
         request.setEndDate(Constants.formatWithDate.parse("2018-02-01"));
-        mockQuandleTableModel = new QuandleTableModel();
-        mockQuandleTableEntry = new QuandleTableEntry();
-        mockQuandleTableEntry.setDate(Constants.formatWithDate.parse("2018-01-01"));
-        mockQuandleTableEntry.setOpen(4);
-        mockQuandleTableEntry.setClose(10);
-        mockQuandleTableEntry.setLow(1);
-        mockQuandleTableEntry.setHigh(14);
-        mockQuandleTableEntry.setTicker(TICKER);
-        mockQuandleTableEntry.setVolume(10);
+        mockQuandlTableModel = new QuandlTableModel();
+        mockQuandlTableEntry = new QuandlTableEntry();
+        mockQuandlTableEntry.setDate(Constants.formatWithDate.parse("2018-01-01"));
+        mockQuandlTableEntry.setOpen(4);
+        mockQuandlTableEntry.setClose(10);
+        mockQuandlTableEntry.setLow(1);
+        mockQuandlTableEntry.setHigh(14);
+        mockQuandlTableEntry.setTicker(TICKER);
+        mockQuandlTableEntry.setVolume(10);
     }
 
     /* Test that models related to getting the stock prices from API works properly.
@@ -61,27 +61,27 @@ public class StockAnalyzerServiceTests {
      * */
     @Test
     public void testGetStockPricesPass() {
-        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
-        mockQuandleTableEntries.add(this.mockQuandleTableEntry);
-        this.mockQuandleTableModel.setEntries(mockQuandleTableEntries);
-        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(mockQuandleTableModel));
+        List<QuandlTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        mockQuandleTableEntries.add(this.mockQuandlTableEntry);
+        this.mockQuandlTableModel.setEntries(mockQuandleTableEntries);
+        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(mockQuandlTableModel));
         WikiTableResponse response = this.service.getPrice(request);
-        Assert.assertTrue(response.getQuandleTableModel() != null && response.getQuandleTableModel().getEntries() != null);
-        Assert.assertEquals(mockQuandleTableEntries, response.getQuandleTableModel().getEntries());
+        Assert.assertTrue(response.getQuandlTableModel() != null && response.getQuandlTableModel().getEntries() != null);
+        Assert.assertEquals(mockQuandleTableEntries, response.getQuandlTableModel().getEntries());
     }
 
     /* Test that response will correctly contain the correct error message if the Quandl Api threw an error
      */
     @Test
     public void testGetStockPricesReceivedErrorOnResponseFromQuandlApi() {
-        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
-        mockQuandleTableEntries.add(this.mockQuandleTableEntry);
-        QuandleTableModel model = new QuandleTableModel();
+        List<QuandlTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        mockQuandleTableEntries.add(this.mockQuandlTableEntry);
+        QuandlTableModel model = new QuandlTableModel();
         model.setEntries(mockQuandleTableEntries);
         model.setError("Something went wrong with Quandl");
         when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
         WikiTableResponse response = this.service.getPrice(request);
-        Assert.assertEquals("Something went wrong with Quandl", response.getQuandleTableModel().getError());
+        Assert.assertEquals("Something went wrong with Quandl", response.getQuandlTableModel().getError());
         Assert.assertEquals("Error in the api request call to quandl, check inner error", response.getError());
     }
 
@@ -89,8 +89,8 @@ public class StockAnalyzerServiceTests {
      */
     @Test
     public void testGetStockPricesReceivedNoEntriesFromApi() {
-        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
-        QuandleTableModel model = new QuandleTableModel();
+        List<QuandlTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        QuandlTableModel model = new QuandlTableModel();
         model.setEntries(mockQuandleTableEntries);
         when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
         WikiTableResponse response = this.service.getPrice(request);
@@ -102,16 +102,16 @@ public class StockAnalyzerServiceTests {
      */
     @Test
     public void testGetAveragePricesForMonth() throws Exception {
-        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
-        QuandleTableEntry quandleTableEntry = new QuandleTableEntry();
-        quandleTableEntry.setTicker(TICKER);
-        quandleTableEntry.setDate(Constants.formatWithDate.parse("2018-01-02"));
-        quandleTableEntry.setOpen(3);
-        quandleTableEntry.setClose(5);
-        mockQuandleTableEntries.add(quandleTableEntry);
-        mockQuandleTableEntries.add(this.mockQuandleTableEntry);
+        List<QuandlTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        QuandlTableEntry quandlTableEntry = new QuandlTableEntry();
+        quandlTableEntry.setTicker(TICKER);
+        quandlTableEntry.setDate(Constants.formatWithDate.parse("2018-01-02"));
+        quandlTableEntry.setOpen(3);
+        quandlTableEntry.setClose(5);
+        mockQuandleTableEntries.add(quandlTableEntry);
+        mockQuandleTableEntries.add(this.mockQuandlTableEntry);
 
-        QuandleTableModel model = new QuandleTableModel();
+        QuandlTableModel model = new QuandlTableModel();
         model.setEntries(mockQuandleTableEntries);
         when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(model));
         List<AverageMonthPriceFromQuandlTable> expectedMonthlyPricesForResponse = new ArrayList<>();
@@ -163,16 +163,16 @@ public class StockAnalyzerServiceTests {
      */
     @Test
     public void testCase1and2ForMaximumProfitToReturnEstimatedValues() throws Exception {
-        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
-        QuandleTableEntry quandleTableEntry = new QuandleTableEntry();
-        quandleTableEntry.setTicker(TICKER);
-        quandleTableEntry.setDate(Constants.formatWithDate.parse("2018-01-01"));
-        quandleTableEntry.setOpen(2);
-        quandleTableEntry.setClose(5);
-        quandleTableEntry.setLow(1);
-        quandleTableEntry.setHigh(7);
-        mockQuandleTableEntries.add(quandleTableEntry);
-        QuandleTableModel model = new QuandleTableModel();
+        List<QuandlTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        QuandlTableEntry quandlTableEntry = new QuandlTableEntry();
+        quandlTableEntry.setTicker(TICKER);
+        quandlTableEntry.setDate(Constants.formatWithDate.parse("2018-01-01"));
+        quandlTableEntry.setOpen(2);
+        quandlTableEntry.setClose(5);
+        quandlTableEntry.setLow(1);
+        quandlTableEntry.setHigh(7);
+        mockQuandleTableEntries.add(quandlTableEntry);
+        QuandlTableModel model = new QuandlTableModel();
         model.setEntries(mockQuandleTableEntries);
         when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(model));
         Date expectedDate = Constants.formatWithDate.parse("2018-01-01");
@@ -200,16 +200,16 @@ public class StockAnalyzerServiceTests {
 
     @Test
     public void testCase3ForMaximumProfit() throws Exception {
-        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
-        QuandleTableEntry quandleTableEntry = new QuandleTableEntry();
-        quandleTableEntry.setTicker(TICKER);
-        quandleTableEntry.setDate(Constants.formatWithDate.parse("2018-01-01"));
-        quandleTableEntry.setOpen(5);
-        quandleTableEntry.setClose(1);
-        quandleTableEntry.setLow(1);
-        quandleTableEntry.setHigh(5);
-        mockQuandleTableEntries.add(quandleTableEntry);
-        QuandleTableModel model = new QuandleTableModel();
+        List<QuandlTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        QuandlTableEntry quandlTableEntry = new QuandlTableEntry();
+        quandlTableEntry.setTicker(TICKER);
+        quandlTableEntry.setDate(Constants.formatWithDate.parse("2018-01-01"));
+        quandlTableEntry.setOpen(5);
+        quandlTableEntry.setClose(1);
+        quandlTableEntry.setLow(1);
+        quandlTableEntry.setHigh(5);
+        mockQuandleTableEntries.add(quandlTableEntry);
+        QuandlTableModel model = new QuandlTableModel();
         model.setEntries(mockQuandleTableEntries);
         when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(model));
         Date expectedDate = Constants.formatWithDate.parse("2018-01-01");
@@ -225,16 +225,16 @@ public class StockAnalyzerServiceTests {
 
     @Test
     public void testCase4ForMaximumProfit() throws Exception {
-        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
-        QuandleTableEntry quandleTableEntry = new QuandleTableEntry();
-        quandleTableEntry.setTicker(TICKER);
-        quandleTableEntry.setDate(Constants.formatWithDate.parse("2018-01-01"));
-        quandleTableEntry.setOpen(1);
-        quandleTableEntry.setClose(5);
-        quandleTableEntry.setLow(1);
-        quandleTableEntry.setHigh(5);
-        mockQuandleTableEntries.add(quandleTableEntry);
-        QuandleTableModel model = new QuandleTableModel();
+        List<QuandlTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        QuandlTableEntry quandlTableEntry = new QuandlTableEntry();
+        quandlTableEntry.setTicker(TICKER);
+        quandlTableEntry.setDate(Constants.formatWithDate.parse("2018-01-01"));
+        quandlTableEntry.setOpen(1);
+        quandlTableEntry.setClose(5);
+        quandlTableEntry.setLow(1);
+        quandlTableEntry.setHigh(5);
+        mockQuandleTableEntries.add(quandlTableEntry);
+        QuandlTableModel model = new QuandlTableModel();
         model.setEntries(mockQuandleTableEntries);
         when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(model));
         Date expectedDate = Constants.formatWithDate.parse("2018-01-01");
@@ -251,9 +251,9 @@ public class StockAnalyzerServiceTests {
     //Test exception handling
     @Test(expected = Exception.class)
     public void getMonthlyAverageHandleQuandlApiReturnedWithError() throws Exception {
-        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
-        mockQuandleTableEntries.add(this.mockQuandleTableEntry);
-        QuandleTableModel model = new QuandleTableModel();
+        List<QuandlTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        mockQuandleTableEntries.add(this.mockQuandlTableEntry);
+        QuandlTableModel model = new QuandlTableModel();
         model.setEntries(mockQuandleTableEntries);
         model.setError("Something went wrong with Quandl");
         when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
@@ -264,9 +264,9 @@ public class StockAnalyzerServiceTests {
     //Test exception handling
     @Test(expected = Exception.class)
     public void getMaxDailyProfitHandleQuandlApiReturnedWithError() throws Exception {
-        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
-        mockQuandleTableEntries.add(this.mockQuandleTableEntry);
-        QuandleTableModel model = new QuandleTableModel();
+        List<QuandlTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        mockQuandleTableEntries.add(this.mockQuandlTableEntry);
+        QuandlTableModel model = new QuandlTableModel();
         model.setEntries(mockQuandleTableEntries);
         model.setError("Something went wrong with Quandl");
         when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
@@ -278,19 +278,19 @@ public class StockAnalyzerServiceTests {
      */
     @Test
     public void testGetBusyDays() throws Exception {
-        QuandleTableModel model = new QuandleTableModel();
-        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
-        QuandleTableEntry expectedEntry = new QuandleTableEntry();
+        QuandlTableModel model = new QuandlTableModel();
+        List<QuandlTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        QuandlTableEntry expectedEntry = new QuandlTableEntry();
         expectedEntry.setTicker(TICKER);
         expectedEntry.setDate(Constants.formatWithDate.parse("2018-01-02"));
         expectedEntry.setVolume(20);
         mockQuandleTableEntries.add(expectedEntry);
-        mockQuandleTableEntries.add(this.mockQuandleTableEntry);
-        QuandleTableEntry quandleTableEntry1 = new QuandleTableEntry();
-        quandleTableEntry1.setTicker(TICKER);
-        quandleTableEntry1.setDate(Constants.formatWithDate.parse("2018-01-03"));
-        quandleTableEntry1.setVolume(15);
-        mockQuandleTableEntries.add(quandleTableEntry1);
+        mockQuandleTableEntries.add(this.mockQuandlTableEntry);
+        QuandlTableEntry quandlTableEntry1 = new QuandlTableEntry();
+        quandlTableEntry1.setTicker(TICKER);
+        quandlTableEntry1.setDate(Constants.formatWithDate.parse("2018-01-03"));
+        quandlTableEntry1.setVolume(15);
+        mockQuandleTableEntries.add(quandlTableEntry1);
         model.setEntries(mockQuandleTableEntries);
         when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(model));
         // expectedAverageVolume = 15 10+20+15 = 45/3 = 15

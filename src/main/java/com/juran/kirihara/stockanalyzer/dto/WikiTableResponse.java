@@ -1,21 +1,21 @@
 package com.juran.kirihara.stockanalyzer.dto;
 
-import com.juran.kirihara.stockanalyzer.models.QuandleTableModel;
+import com.juran.kirihara.stockanalyzer.models.QuandlTableModel;
 
 public class WikiTableResponse {
-    private QuandleTableModel quandleTableModel;
+    private QuandlTableModel quandlTableModel;
     private String error;
 
     public WikiTableResponse() {
         super();
     }
 
-    public QuandleTableModel getQuandleTableModel() {
-        return quandleTableModel;
+    public QuandlTableModel getQuandlTableModel() {
+        return quandlTableModel;
     }
 
-    public void setQuandleTableModel(QuandleTableModel quandleTableModel) {
-        this.quandleTableModel = new QuandleTableModel(quandleTableModel);
+    public void setQuandlTableModel(QuandlTableModel quandlTableModel) {
+        this.quandlTableModel = new QuandlTableModel(quandlTableModel);
     }
 
     public String getError() {
