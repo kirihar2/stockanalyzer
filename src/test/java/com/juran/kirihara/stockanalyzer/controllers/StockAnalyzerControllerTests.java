@@ -1,9 +1,6 @@
 package com.juran.kirihara.stockanalyzer.controllers;
 
-import com.juran.kirihara.stockanalyzer.dto.AverageMonthlyPriceResponse;
-import com.juran.kirihara.stockanalyzer.dto.MaxDailyProfitResponse;
-import com.juran.kirihara.stockanalyzer.dto.QuandlRequest;
-import com.juran.kirihara.stockanalyzer.dto.WikiTableResponse;
+import com.juran.kirihara.stockanalyzer.dto.*;
 import com.juran.kirihara.stockanalyzer.services.StockAnalyzerService;
 import org.junit.Assert;
 import org.junit.Test;
@@ -77,7 +74,6 @@ public class StockAnalyzerControllerTests {
         List<MaxDailyProfitResponse> expectedResponseList = new ArrayList<>();
         MaxDailyProfitResponse expectedResponse = new MaxDailyProfitResponse();
         expectedResponseList.add(expectedResponse);
-        expectedResponse.setError("something went wrong in service");
         when(service.getMaxDailyProfit(mockRequest)).thenReturn(expectedResponseList);
         ResponseEntity<List<MaxDailyProfitResponse>> response = controller.getMaxDailyProfit(mockRequest);
         Assert.assertSame(expectedResponse, response.getBody().get(0));
@@ -90,6 +86,28 @@ public class StockAnalyzerControllerTests {
         expectedResponse.setError("something went wrong in service");
         when(service.getMaxDailyProfit(any())).thenThrow(new RuntimeException("something went wrong in service"));
         ResponseEntity<List<MaxDailyProfitResponse>> response = controller.getMaxDailyProfit(mockRequest);
+        Assert.assertEquals(expectedResponse.getError(), response.getBody().get(0).getError());
+        Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void testGetBusyDaysControllerPass() throws Exception {
+        QuandlRequest mockRequest = new QuandlRequest();
+        List<BusyDaysResponse> expectedResponseList = new ArrayList<>();
+        BusyDaysResponse expectedResponse = new BusyDaysResponse();
+        expectedResponseList.add(expectedResponse);
+        when(service.getBusyDays(mockRequest)).thenReturn(expectedResponseList);
+        ResponseEntity<List<BusyDaysResponse>> response = controller.getBusyDays(mockRequest);
+        Assert.assertSame(expectedResponse, response.getBody().get(0));
+    }
+
+    @Test
+    public void testGetBusyDaysControllerWhenServiceThrowsError() throws Exception {
+        QuandlRequest mockRequest = new QuandlRequest();
+        BusyDaysResponse expectedResponse = new BusyDaysResponse();
+        expectedResponse.setError("something went wrong in service");
+        when(service.getBusyDays(any())).thenThrow(new RuntimeException("something went wrong in service"));
+        ResponseEntity<List<BusyDaysResponse>> response = controller.getBusyDays(mockRequest);
         Assert.assertEquals(expectedResponse.getError(), response.getBody().get(0).getError());
         Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }

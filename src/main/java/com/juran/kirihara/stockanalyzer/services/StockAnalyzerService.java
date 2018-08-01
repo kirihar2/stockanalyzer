@@ -210,12 +210,14 @@ public class StockAnalyzerService {
     }
 
     private Double getValueFromQuandlEntryGivenKey(QuandleTableEntry entry, String key) {
-        if (Constants.OPEN_PRICE_KEY.equals(key))
-            return entry.getOpen();
-        else if (Constants.CLOSE_PRICE_KEY.equals(key))
-            return entry.getClose();
-        else if (Constants.VOLUME_KEY.equals(key))
-            return entry.getVolume();
+        switch (key) {
+            case Constants.OPEN_PRICE_KEY:
+                return entry.getOpen();
+            case Constants.CLOSE_PRICE_KEY:
+                return entry.getClose();
+            case Constants.VOLUME_KEY:
+                return entry.getVolume();
+        }
         throw new NullPointerException();
     }
 
