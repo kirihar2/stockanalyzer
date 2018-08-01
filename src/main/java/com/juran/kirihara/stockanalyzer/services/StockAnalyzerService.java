@@ -3,6 +3,7 @@ package com.juran.kirihara.stockanalyzer.services;
 import com.juran.kirihara.stockanalyzer.Constants;
 import com.juran.kirihara.stockanalyzer.components.QuandlConnector;
 import com.juran.kirihara.stockanalyzer.dto.*;
+import com.juran.kirihara.stockanalyzer.models.BusyDaysForTicker;
 import com.juran.kirihara.stockanalyzer.models.MaxDailyProfitFromQuandlTable;
 import com.juran.kirihara.stockanalyzer.models.QuandleTableEntry;
 import com.juran.kirihara.stockanalyzer.models.QuandleTableModel;
@@ -24,7 +25,6 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "service")
 public class StockAnalyzerService {
     private static Logger logger = LoggerFactory.getLogger(StockAnalyzerService.class);
-    private static SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM");
     @Autowired
     private QuandlConnector quandlConnector;
 
@@ -32,7 +32,7 @@ public class StockAnalyzerService {
 
         WikiTableResponse response = new WikiTableResponse();
         ResponseEntity<QuandleTableModel> responseFromQuandl = quandlConnector.getWikiTableResponse(request);
-        if (responseFromQuandl.getBody().getError() != null &&
+        if (responseFromQuandl != null && responseFromQuandl.getBody().getError() != null &&
                 !responseFromQuandl.getBody().getError().isEmpty()) {
             String errorMessage = "Error in the api request call to quandl, check inner error";
             logger.error(errorMessage);
@@ -70,31 +70,34 @@ public class StockAnalyzerService {
             }
         */
         Map<String, Map<String, Map<String, Double>>> bucketForMonthsPerTicker = new HashMap<>();
-
-        if (quandleTableModel != null) {
-            for (QuandleTableEntry entry : quandleTableModel.getEntries()) {
-                String currentTicker = entry.getTicker();
-                if (!bucketForMonthsPerTicker.containsKey(currentTicker)) {
-                    bucketForMonthsPerTicker.put(currentTicker, new HashMap<>());
-                }
-                Map<String, Map<String, Double>> bucketForMonths = bucketForMonthsPerTicker.get(currentTicker);
-                String monthKey = fmt.format(entry.getDate());
-                if (!bucketForMonths.containsKey(monthKey)) {
-                    Map<String, Double> bucketForPrices = new HashMap<>();
-                    bucketForPrices.put(Constants.OPEN_PRICE_KEY, entry.getOpen());
-                    bucketForPrices.put(Constants.CLOSE_PRICE_KEY, entry.getClose());
-                    bucketForPrices.put(Constants.COUNT_KEY, (double) 1);
-                    bucketForMonths.put(monthKey, bucketForPrices);
-                } else {
-                    Map<String, Double> updatedPrices = updatePrices(bucketForMonths.get(monthKey), entry.getOpen(), entry.getClose());
-                    bucketForMonths.put(monthKey, updatedPrices);
-                }
-                bucketForMonthsPerTicker.put(currentTicker, bucketForMonths);
-            }
-        }
+        List<String> keys = new ArrayList<>();
+        keys.add(Constants.OPEN_PRICE_KEY);
+        keys.add(Constants.CLOSE_PRICE_KEY);
+        calculateRunningTotalForGivenKey(quandleTableModel, bucketForMonthsPerTicker, keys, Constants.formatMonth);
+//        if (quandleTableModel != null) {
+//            for (QuandleTableEntry entry : quandleTableModel.getEntries()) {
+//                String currentTicker = entry.getTicker();
+//                if (!bucketForMonthsPerTicker.containsKey(currentTicker)) {
+//                    bucketForMonthsPerTicker.put(currentTicker, new HashMap<>());
+//                }
+//                Map<String, Map<String, Double>> bucketForMonths = bucketForMonthsPerTicker.get(currentTicker);
+//                String monthKey = Constants.formatMonth.format(entry.getDate());
+//                if (!bucketForMonths.containsKey(monthKey)) {
+//                    Map<String, Double> bucketForPrices = new HashMap<>();
+//                    bucketForPrices.put(Constants.OPEN_PRICE_KEY, entry.getOpen());
+//                    bucketForPrices.put(Constants.CLOSE_PRICE_KEY, entry.getClose());
+//                    bucketForPrices.put(Constants.COUNT_KEY, (double) 1);
+//                    bucketForMonths.put(monthKey, bucketForPrices);
+//                } else {
+//                    Map<String, Double> updatedPrices = calculateRunningTotal(bucketForMonths.get(monthKey),keys,entry );
+//                    bucketForMonths.put(monthKey, updatedPrices);
+//                }
+//                bucketForMonthsPerTicker.put(currentTicker, bucketForMonths);
+//            }
+//        }
         List<AverageMonthlyPriceResponse> response = new ArrayList<>();
         for (String ticker : bucketForMonthsPerTicker.keySet()) {
-            response.add(new AverageMonthlyPriceResponse(ticker, calculateAverages(bucketForMonthsPerTicker.get(ticker))));
+            response.add(new AverageMonthlyPriceResponse(ticker, calculateAverages(bucketForMonthsPerTicker.get(ticker), keys)));
         }
         return response;
     }
@@ -147,6 +150,7 @@ public class StockAnalyzerService {
         WikiTableResponse wikiTableResponse = getPrice(request);
         rethrowErrorThrownByQuandlApiIfExists(wikiTableResponse);
         QuandleTableModel quandleTableModel = wikiTableResponse.getQuandleTableModel();
+
         if (quandleTableModel != null) {
             for (QuandleTableEntry entry : quandleTableModel.getEntries()) {
                 String currentTicker = entry.getTicker();
@@ -178,11 +182,122 @@ public class StockAnalyzerService {
         return response;
     }
 
-    public List<BusyDaysResponse> getBusyDays() {
-        List<BusyDaysResponse> response = new ArrayList<>();
+    private void calculateRunningTotalForGivenKey(QuandleTableModel quandleTableModel, Map<String, Map<String, Map<String, Double>>> bucketForGivenTicker, List<String> keysFromQuandleTableEntry, SimpleDateFormat dateFormat) {
+        if (quandleTableModel != null) {
+            for (QuandleTableEntry entry : quandleTableModel.getEntries()) {
+                String currentTicker = entry.getTicker();
+                if (!bucketForGivenTicker.containsKey(currentTicker)) {
+                    bucketForGivenTicker.put(currentTicker, new HashMap<>());
+                }
+                Map<String, Map<String, Double>> bucketForGivenDate = bucketForGivenTicker.get(currentTicker);
+                String dateKey = dateFormat.format(entry.getDate());
+                if (!bucketForGivenDate.containsKey(dateKey)) {
+                    Map<String, Double> bucketForPrices = new HashMap<>();
+                    for (String key : keysFromQuandleTableEntry) {
 
+                        bucketForPrices.put(key, getValueFromQuandlEntryGivenKey(entry, key));
+                    }
+                    bucketForPrices.put(Constants.COUNT_KEY, (double) 1);
+                    bucketForGivenDate.put(dateKey, bucketForPrices);
+                } else {
+
+                    Map<String, Double> updatedPrices = calculateRunningTotal(bucketForGivenDate.get(dateKey), keysFromQuandleTableEntry, entry);
+                    bucketForGivenDate.put(dateKey, updatedPrices);
+                }
+                bucketForGivenTicker.put(currentTicker, bucketForGivenDate);
+            }
+        }
+    }
+
+    private Double getValueFromQuandlEntryGivenKey(QuandleTableEntry entry, String key) {
+        if (Constants.OPEN_PRICE_KEY.equals(key))
+            return entry.getOpen();
+        else if (Constants.CLOSE_PRICE_KEY.equals(key))
+            return entry.getClose();
+        else if (Constants.VOLUME_KEY.equals(key))
+            return entry.getVolume();
+        throw new NullPointerException();
+    }
+
+    /*  Calculates the busy days for trading for each stock
+     *      Will calculate the average volume with the first pass through all element
+     *      then place each data into the response if the volume is > 10% of average trading volume
+     *      within the given time frame for each stock.
+     */
+    public List<BusyDaysResponse> getBusyDays(QuandlRequest request) throws Exception {
+        WikiTableResponse wikiTableResponse = getPrice(request);
+        rethrowErrorThrownByQuandlApiIfExists(wikiTableResponse);
+        List<BusyDaysResponse> response = new ArrayList<>();
+        Map<String, Integer> tickersInTheResponse = new HashMap<>();
+        QuandleTableModel quandleTableModel = wikiTableResponse.getQuandleTableModel();
+        List<String> keysToCalculateAverage = new ArrayList<>();
+        keysToCalculateAverage.add(Constants.VOLUME_KEY);
+        Map<String, Map<String, Double>> totalVolumeForTicker = calculateRunningTotalForEntireDate(quandleTableModel, keysToCalculateAverage);
+        Map<String, Map<String, Double>> averageVolumeForTicker = calculateAverages(totalVolumeForTicker, keysToCalculateAverage);
+
+        if (quandleTableModel != null) {
+            for (QuandleTableEntry entry : quandleTableModel.getEntries()) {
+                String currentTicker = entry.getTicker();
+                if (!averageVolumeForTicker.containsKey(currentTicker)) {
+                    throw new Exception("Found an unknown key for ticker name when calculating busy days ");
+                }
+                double averageVolume = averageVolumeForTicker.get(currentTicker).get(Constants.VOLUME_KEY);
+                if (entry.getVolume() > averageVolume * 1.1) {
+                    BusyDaysResponse busyDaysResponse;
+                    BusyDaysForTicker busyDaysForTickerToAdd = new BusyDaysForTicker();
+                    List<BusyDaysForTicker> busyDaysForTickerList;
+                    if (!tickersInTheResponse.containsKey(currentTicker)) {
+                        tickersInTheResponse.put(currentTicker, response.size());
+                        busyDaysResponse = new BusyDaysResponse();
+                        busyDaysResponse.setTicker(currentTicker);
+                        busyDaysForTickerList = new ArrayList<>();
+                        busyDaysResponse.setBusyDaysForTickerList(busyDaysForTickerList);
+                        response.add(busyDaysResponse);
+                    }
+                    int ind = tickersInTheResponse.get(currentTicker);
+                    busyDaysResponse = response.get(ind);
+                    busyDaysForTickerList = busyDaysResponse.getBusyDaysForTickerList();
+                    busyDaysForTickerToAdd.setDate(entry.getDate());
+                    busyDaysForTickerToAdd.setVolume(entry.getVolume());
+                    busyDaysForTickerList.add(busyDaysForTickerToAdd);
+                    busyDaysResponse.setBusyDaysForTickerList(busyDaysForTickerList);
+                    response.set(ind, busyDaysResponse);
+                }
+            }
+        }
+        for (String ticker : tickersInTheResponse.keySet()) {
+            int ind = tickersInTheResponse.get(ticker);
+            BusyDaysResponse toAddAverageToResponse = response.get(ind);
+            toAddAverageToResponse.setAverageVolume(averageVolumeForTicker.get(ticker).get(Constants.VOLUME_KEY));
+            response.set(ind, toAddAverageToResponse);
+        }
         return response;
     }
+
+
+    private Map<String, Map<String, Double>> calculateRunningTotalForEntireDate(QuandleTableModel quandleTableModel, List<String> keysToCalculateAverage) {
+        Map<String, Map<String, Double>> runningTotal = new HashMap<>();
+        if (quandleTableModel != null) {
+            for (QuandleTableEntry entry : quandleTableModel.getEntries()) {
+                String currentTicker = entry.getTicker();
+                Map<String, Double> runningTotalEntry;
+                if (!runningTotal.containsKey(currentTicker)) {
+                    runningTotalEntry = new HashMap<>();
+                    for (String key : keysToCalculateAverage) {
+
+                        runningTotalEntry.put(key, getValueFromQuandlEntryGivenKey(entry, key));
+                    }
+                    runningTotalEntry.put(Constants.COUNT_KEY, (double) 1);
+                } else {
+                    runningTotalEntry = calculateRunningTotal(runningTotal.get(currentTicker), keysToCalculateAverage, entry);
+                }
+                runningTotal.put(currentTicker, runningTotalEntry);
+            }
+        }
+        return runningTotal;
+    }
+
+
     private double calculateMaximumProfit(double maxProfitPotentialFromOpen, double maxProfitPotentialToClose) {
         double ret;
         //To cover case 3 and 4 just select one of the profits
@@ -195,24 +310,33 @@ public class StockAnalyzerService {
     }
 
 
-    private Map<String, Double> updatePrices(Map<String, Double> originalPrices, Double open, Double close) {
-        Map<String, Double> updatedAveragePrices = new HashMap<>(originalPrices);
-        double updatedCount = updatedAveragePrices.get(Constants.COUNT_KEY) + 1;
-        updatedAveragePrices.put(Constants.COUNT_KEY, updatedCount);
-        updatedAveragePrices.put(Constants.OPEN_PRICE_KEY, (updatedAveragePrices.get(Constants.OPEN_PRICE_KEY) + open));
-        updatedAveragePrices.put(Constants.CLOSE_PRICE_KEY, (updatedAveragePrices.get(Constants.CLOSE_PRICE_KEY) + close));
-        return updatedAveragePrices;
+    private Map<String, Double> calculateRunningTotal(Map<String, Double> originalTotal, List<String> keys, QuandleTableEntry entry) {
+        Map<String, Double> runningTotal = new HashMap<>(originalTotal);
+        double updatedCount = runningTotal.get(Constants.COUNT_KEY) + 1;
+        runningTotal.put(Constants.COUNT_KEY, updatedCount);
+        for (String key : keys) {
+            try {
+                if (!key.equals(Constants.COUNT_KEY))
+                    runningTotal.put(key, (runningTotal.get(key) + getValueFromQuandlEntryGivenKey(entry, key)));
+            } catch (NullPointerException e) {
+                logger.error("key " + key + " not found in the entry");
+                throw e;
+            }
+        }
+
+        return runningTotal;
     }
 
-    private Map<String, Map<String, Double>> calculateAverages(Map<String, Map<String, Double>> totalCount) {
-        Map<String, Map<String, Double>> averagePrices = new HashMap<>(totalCount);
-        for (String month : averagePrices.keySet()) {
-            Map<String, Double> monthPrices = averagePrices.get(month);
-            Double totalPricesCounted = monthPrices.get(Constants.COUNT_KEY);
-            monthPrices.put(Constants.OPEN_PRICE_KEY, monthPrices.get(Constants.OPEN_PRICE_KEY) / totalPricesCounted);
-            monthPrices.put(Constants.CLOSE_PRICE_KEY, monthPrices.get(Constants.CLOSE_PRICE_KEY) / totalPricesCounted);
-            averagePrices.put(month, monthPrices);
+    private Map<String, Map<String, Double>> calculateAverages(Map<String, Map<String, Double>> totalCount, List<String> keys) {
+        Map<String, Map<String, Double>> averageValues = new HashMap<>(totalCount);
+        for (String date : averageValues.keySet()) {
+            Map<String, Double> averageValuesForGivenDate = averageValues.get(date);
+            Double totalValues = averageValuesForGivenDate.get(Constants.COUNT_KEY);
+            for (String key : keys) {
+                averageValuesForGivenDate.put(key, averageValuesForGivenDate.get(key) / totalValues);
+            }
+            averageValues.put(date, averageValuesForGivenDate);
         }
-        return averagePrices;
+        return averageValues;
     }
 }

@@ -1,9 +1,6 @@
 package com.juran.kirihara.stockanalyzer.controllers;
 
-import com.juran.kirihara.stockanalyzer.dto.AverageMonthlyPriceResponse;
-import com.juran.kirihara.stockanalyzer.dto.MaxDailyProfitResponse;
-import com.juran.kirihara.stockanalyzer.dto.QuandlRequest;
-import com.juran.kirihara.stockanalyzer.dto.WikiTableResponse;
+import com.juran.kirihara.stockanalyzer.dto.*;
 import com.juran.kirihara.stockanalyzer.services.StockAnalyzerService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -75,6 +72,25 @@ public class StockAnalyzerController {
         } catch (Exception e) {
             List<MaxDailyProfitResponse> errorResponse = new ArrayList<>();
             MaxDailyProfitResponse error = new MaxDailyProfitResponse();
+            logger.error(e.getMessage());
+            error.setError(e.getMessage());
+            errorResponse.add(error);
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+
+    }
+
+    @PostMapping(value = "getBusyDays", consumes = "application/json", produces = "application/json")
+    @ApiOperation("Request to get busy days of trade volume for each ticker. 10% higher trade volume than the average")
+    public ResponseEntity<List<BusyDaysResponse>> getBusyDays(
+            @ApiParam("Information to get from Database")
+            @RequestBody QuandlRequest request
+    ) {
+        try {
+            return ResponseEntity.ok().body(service.getBusyDays(request));
+        } catch (Exception e) {
+            List<BusyDaysResponse> errorResponse = new ArrayList<>();
+            BusyDaysResponse error = new BusyDaysResponse();
             logger.error(e.getMessage());
             error.setError(e.getMessage());
             errorResponse.add(error);

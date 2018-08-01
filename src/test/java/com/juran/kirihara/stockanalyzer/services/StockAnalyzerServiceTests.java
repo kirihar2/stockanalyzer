@@ -2,11 +2,9 @@ package com.juran.kirihara.stockanalyzer.services;
 
 import com.juran.kirihara.stockanalyzer.Constants;
 import com.juran.kirihara.stockanalyzer.components.QuandlConnector;
-import com.juran.kirihara.stockanalyzer.dto.AverageMonthlyPriceResponse;
-import com.juran.kirihara.stockanalyzer.dto.MaxDailyProfitResponse;
-import com.juran.kirihara.stockanalyzer.dto.QuandlRequest;
-import com.juran.kirihara.stockanalyzer.dto.WikiTableResponse;
+import com.juran.kirihara.stockanalyzer.dto.*;
 import com.juran.kirihara.stockanalyzer.models.AverageMonthPriceFromQuandlTable;
+import com.juran.kirihara.stockanalyzer.models.BusyDaysForTicker;
 import com.juran.kirihara.stockanalyzer.models.QuandleTableEntry;
 import com.juran.kirihara.stockanalyzer.models.QuandleTableModel;
 import org.junit.Assert;
@@ -87,6 +85,18 @@ public class StockAnalyzerServiceTests {
         Assert.assertEquals("Error in the api request call to quandl, check inner error", response.getError());
     }
 
+    /* Test that response will correctly contain the correct error message if the Quandl Api threw an error
+     */
+    @Test
+    public void testGetStockPricesReceivedNoEntriesFromApi() {
+        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        QuandleTableModel model = new QuandleTableModel();
+        model.setEntries(mockQuandleTableEntries);
+        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
+        WikiTableResponse response = this.service.getPrice(request);
+        Assert.assertEquals("Error in the api request call to quandl, could not find entries with the given parameters. " +
+                "Please check dates are valid dates and ticker is a valid stock name", response.getError());
+    }
 
     /* Test to validate the average is correctly calculated for the open and close price
      */
@@ -262,5 +272,36 @@ public class StockAnalyzerServiceTests {
         when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
         List<MaxDailyProfitResponse> response = this.service.getMaxDailyProfit(request);
         Assert.assertTrue(response != null);//should never hit here
+    }
+
+    /* Test to validate the busy days by trade volume is correctly calculated
+     */
+    @Test
+    public void testGetBusyDays() throws Exception {
+        QuandleTableModel model = new QuandleTableModel();
+        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        QuandleTableEntry expectedEntry = new QuandleTableEntry();
+        expectedEntry.setTicker(TICKER);
+        expectedEntry.setDate(Constants.formatWithDate.parse("2018-01-02"));
+        expectedEntry.setVolume(20);
+        mockQuandleTableEntries.add(expectedEntry);
+        mockQuandleTableEntries.add(this.mockQuandleTableEntry);
+        QuandleTableEntry quandleTableEntry1 = new QuandleTableEntry();
+        quandleTableEntry1.setTicker(TICKER);
+        quandleTableEntry1.setDate(Constants.formatWithDate.parse("2018-01-03"));
+        quandleTableEntry1.setVolume(15);
+        mockQuandleTableEntries.add(quandleTableEntry1);
+        model.setEntries(mockQuandleTableEntries);
+        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(model));
+        // expectedAverageVolume = 15 10+20+15 = 45/3 = 15
+        // threshold 15*1.1 = 16.5
+
+        List<BusyDaysResponse> actualResponse = this.service.getBusyDays(request);
+        Assert.assertNull(actualResponse.get(0).getError());
+        Assert.assertEquals(1, actualResponse.get(0).getBusyDaysForTickerList().size());
+        Assert.assertNotNull(actualResponse.get(0).getBusyDaysForTickerList().get(0));
+        BusyDaysForTicker actualValue = actualResponse.get(0).getBusyDaysForTickerList().get(0);
+        Assert.assertEquals(expectedEntry.getDate(), actualValue.getDate());
+        Assert.assertTrue(expectedEntry.getVolume() == actualValue.getVolume());
     }
 }
