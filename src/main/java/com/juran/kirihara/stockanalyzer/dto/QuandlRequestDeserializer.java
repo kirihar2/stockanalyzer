@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@SuppressWarnings("SpellCheckingInspection")
 public class QuandlRequestDeserializer extends JsonDeserializer<QuandlRequest> {
 
     @Override
@@ -26,7 +27,7 @@ public class QuandlRequestDeserializer extends JsonDeserializer<QuandlRequest> {
                 tickers = Arrays.asList(tickersListAsString.split(","));
 
             } else {
-                //Tickers inputed as a single value
+                //Tickers inputted as a single value
                 tickers = new ArrayList<>();
                 tickers.add(tickersListAsString);
             }

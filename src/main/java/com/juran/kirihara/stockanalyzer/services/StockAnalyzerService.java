@@ -164,7 +164,7 @@ public class StockAnalyzerService {
     }
 
     private double calculateMaximumProfit(double maxProfitPotentialFromOpen, double maxProfitPotentialToClose) {
-        double ret = 0;
+        double ret;
         //To cover case 3 and 4 just select one of the profits
         if (maxProfitPotentialFromOpen == maxProfitPotentialToClose) {
             ret = maxProfitPotentialFromOpen;

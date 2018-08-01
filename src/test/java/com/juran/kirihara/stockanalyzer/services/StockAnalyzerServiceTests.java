@@ -88,7 +88,7 @@ public class StockAnalyzerServiceTests {
     }
 
 
-    /* Test to validate the average is correctly calcluated for the open and close price
+    /* Test to validate the average is correctly calculated for the open and close price
      */
     @Test
     public void testGetAveragePricesForMonth() throws ParseException {
