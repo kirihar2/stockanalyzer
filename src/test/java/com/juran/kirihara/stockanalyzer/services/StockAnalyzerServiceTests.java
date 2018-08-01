@@ -3,6 +3,7 @@ package com.juran.kirihara.stockanalyzer.services;
 import com.juran.kirihara.stockanalyzer.Constants;
 import com.juran.kirihara.stockanalyzer.components.QuandlConnector;
 import com.juran.kirihara.stockanalyzer.dto.AverageMonthlyPriceResponse;
+import com.juran.kirihara.stockanalyzer.dto.MaxDailyProfitResponse;
 import com.juran.kirihara.stockanalyzer.dto.QuandlRequest;
 import com.juran.kirihara.stockanalyzer.dto.WikiTableResponse;
 import com.juran.kirihara.stockanalyzer.models.AverageMonthPriceFromQuandlTable;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
@@ -39,14 +41,16 @@ public class StockAnalyzerServiceTests {
 
     @Before
     public void setUp() throws ParseException {
+        List<String> tickers = new ArrayList<>();
+        tickers.add(TICKER);
         request = new QuandlRequest();
-        request.setTicker(TICKER);
+        request.setTickers(tickers);
         request.setStartDate(Constants.formatWithDate.parse("2018-01-01"));
         request.setEndDate(Constants.formatWithDate.parse("2018-02-01"));
         mockQuandleTableModel = new QuandleTableModel();
         mockQuandleTableEntry = new QuandleTableEntry();
         mockQuandleTableEntry.setDate(Constants.formatWithDate.parse("2018-01-01"));
-        mockQuandleTableEntry.setOpen(1);
+        mockQuandleTableEntry.setOpen(4);
         mockQuandleTableEntry.setClose(10);
         mockQuandleTableEntry.setLow(1);
         mockQuandleTableEntry.setHigh(14);
@@ -90,8 +94,9 @@ public class StockAnalyzerServiceTests {
     public void testGetAveragePricesForMonth() throws ParseException {
         List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
         QuandleTableEntry quandleTableEntry = new QuandleTableEntry();
+        quandleTableEntry.setTicker(TICKER);
         quandleTableEntry.setDate(Constants.formatWithDate.parse("2018-01-02"));
-        quandleTableEntry.setOpen(2);
+        quandleTableEntry.setOpen(3);
         quandleTableEntry.setClose(5);
         mockQuandleTableEntries.add(quandleTableEntry);
         mockQuandleTableEntries.add(this.mockQuandleTableEntry);
@@ -102,16 +107,134 @@ public class StockAnalyzerServiceTests {
         List<AverageMonthPriceFromQuandlTable> expectedMonthlyPricesForResponse = new ArrayList<>();
         AverageMonthPriceFromQuandlTable expectedMonthlyPrice = new AverageMonthPriceFromQuandlTable();
         expectedMonthlyPrice.setMonth("2018-01");
-        expectedMonthlyPrice.setAverage_open(1.5);
+        expectedMonthlyPrice.setAverage_open(3.5);
         expectedMonthlyPrice.setAverage_close(7.5);
         expectedMonthlyPricesForResponse.add(expectedMonthlyPrice);
-
         AverageMonthlyPriceResponse expectedResponse = new AverageMonthlyPriceResponse();
         expectedResponse.setAverageMonthPriceFromQuandlTables(expectedMonthlyPricesForResponse);
         expectedResponse.setTicker(TICKER);
-        AverageMonthlyPriceResponse actualResponse = this.service.getAverageMonthlyPrice(request);
-        Assert.assertEquals(expectedResponse.getTicker(), actualResponse.getTicker());
-        Assert.assertNull(actualResponse.getError());
-        Assert.assertEquals(expectedResponse.getAverageMonthPriceFromQuandlTables().get(0), actualResponse.getAverageMonthPriceFromQuandlTables().get(0));
+        List<AverageMonthlyPriceResponse> actualResponse = this.service.getAverageMonthlyPrice(request);
+        Assert.assertEquals(expectedResponse.getTicker(), actualResponse.get(0).getTicker());
+        Assert.assertNull(actualResponse.get(0).getError());
+        Assert.assertEquals(expectedResponse.getAverageMonthPriceFromQuandlTables().get(0), actualResponse.get(0).getAverageMonthPriceFromQuandlTables().get(0));
+    }
+
+
+    //
+    /*  Tests for maximum profit covers the following cases
+     *  case 1: low before high :
+     *               In this case the true maximum would be buy at open and at low then sell both at high.
+     *
+     *       open      low       high        close
+     *       <--------------------------------->
+     *
+     *  case 2: high before low :
+     *                   In this case the true maximum would be to buy at open and sell at high, then buy at low
+     *                   and sell at close.
+     *
+     *       open      high       low        close
+     *       <--------------------------------->
+     *
+     *       With the above, we can give the best estimate by using buying at open then selling it at high,
+     *       then buying at low and sell in at close. The if the open is the same value as high and close is the same
+     *       as low then the maximum profit would be 0 because the trend would be decreasing in price.
+     *
+     *   case 3:
+     *          high                            low
+     *         open                           close
+     *       <--------------------------------->
+     *
+     * case 4:
+     *         this could also impact the calculation, because it would double the profit that is possible.
+     *         condition would be if high-open = low-close then maximum would be high-open.
+     *          low                            high
+     *         open                           close
+     *       <--------------------------------->
+     */
+    @Test
+    public void testCase1and2ForMaximumProfitToReturnEstimatedValues() throws ParseException {
+        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        QuandleTableEntry quandleTableEntry = new QuandleTableEntry();
+        quandleTableEntry.setTicker(TICKER);
+        quandleTableEntry.setDate(Constants.formatWithDate.parse("2018-01-01"));
+        quandleTableEntry.setOpen(2);
+        quandleTableEntry.setClose(5);
+        quandleTableEntry.setLow(1);
+        quandleTableEntry.setHigh(7);
+        mockQuandleTableEntries.add(quandleTableEntry);
+        QuandleTableModel model = new QuandleTableModel();
+        model.setEntries(mockQuandleTableEntries);
+        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
+        Date expectedDate = Constants.formatWithDate.parse("2018-01-01");
+        //Construct expected response
+//        List<MaxDailyProfitResponse> expectedResponse = new ArrayList<>();
+//        MaxDailyProfitResponse expectedResponseForTicker = new MaxDailyProfitResponse();
+//        List<MaxDailyProfitFromQuandlTable> expectedResponseConstructedFromQuandl = new ArrayList<>();
+//        MaxDailyProfitFromQuandlTable expectedMaxDailyProfitForTicker = new MaxDailyProfitFromQuandlTable();
+        double expectedMaximumProfit = 9;//7-2+5-1
+//        expectedMaxDailyProfitForTicker.setAmountProfit(expectedMaximumProfit);
+//        expectedMaxDailyProfitForTicker.setDate(Constants.formatWithDate.parse("2018-01-01"));
+//        expectedResponseConstructedFromQuandl.add(expectedMaxDailyProfitForTicker);
+//        expectedResponseForTicker.setTicker(TICKER);
+//        expectedResponseForTicker.setMaxDailyProfitsFromQuandlTable(expectedResponseConstructedFromQuandl);
+//        expectedResponse.add(expectedResponseForTicker);
+
+        List<MaxDailyProfitResponse> actualResponse = this.service.getMaxDailyProfit(request);
+        Assert.assertNotNull(actualResponse);
+        Assert.assertNotNull(actualResponse.get(0));
+        Assert.assertNotNull(actualResponse.get(0).getMaxDailyProfitsFromQuandlTable());
+        Assert.assertNotNull(actualResponse.get(0).getMaxDailyProfitsFromQuandlTable().get(0));
+        Assert.assertEquals(expectedDate, actualResponse.get(0).getMaxDailyProfitsFromQuandlTable().get(0).getDate());
+        Assert.assertTrue(expectedMaximumProfit == actualResponse.get(0).getMaxDailyProfitsFromQuandlTable().get(0).getAmountProfit());
+    }
+
+    @Test
+    public void testCase3ForMaximumProfit() throws ParseException {
+        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        QuandleTableEntry quandleTableEntry = new QuandleTableEntry();
+        quandleTableEntry.setTicker(TICKER);
+        quandleTableEntry.setDate(Constants.formatWithDate.parse("2018-01-01"));
+        quandleTableEntry.setOpen(5);
+        quandleTableEntry.setClose(1);
+        quandleTableEntry.setLow(1);
+        quandleTableEntry.setHigh(5);
+        mockQuandleTableEntries.add(quandleTableEntry);
+        QuandleTableModel model = new QuandleTableModel();
+        model.setEntries(mockQuandleTableEntries);
+        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
+        Date expectedDate = Constants.formatWithDate.parse("2018-01-01");
+        double expectedMaximumProfit = 0;//decreasing trend so best profit is not to buy or sell
+        List<MaxDailyProfitResponse> actualResponse = this.service.getMaxDailyProfit(request);
+        Assert.assertNotNull(actualResponse);
+        Assert.assertNotNull(actualResponse.get(0));
+        Assert.assertNotNull(actualResponse.get(0).getMaxDailyProfitsFromQuandlTable());
+        Assert.assertNotNull(actualResponse.get(0).getMaxDailyProfitsFromQuandlTable().get(0));
+        Assert.assertEquals(expectedDate, actualResponse.get(0).getMaxDailyProfitsFromQuandlTable().get(0).getDate());
+        Assert.assertTrue(expectedMaximumProfit == actualResponse.get(0).getMaxDailyProfitsFromQuandlTable().get(0).getAmountProfit());
+    }
+
+    @Test
+    public void testCase4ForMaximumProfit() throws ParseException {
+        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        QuandleTableEntry quandleTableEntry = new QuandleTableEntry();
+        quandleTableEntry.setTicker(TICKER);
+        quandleTableEntry.setDate(Constants.formatWithDate.parse("2018-01-01"));
+        quandleTableEntry.setOpen(1);
+        quandleTableEntry.setClose(5);
+        quandleTableEntry.setLow(1);
+        quandleTableEntry.setHigh(5);
+        mockQuandleTableEntries.add(quandleTableEntry);
+        QuandleTableModel model = new QuandleTableModel();
+        model.setEntries(mockQuandleTableEntries);
+        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
+        Date expectedDate = Constants.formatWithDate.parse("2018-01-01");
+        double expectedMaximumProfit = 4;//increasing trend so high-low 5-1
+        List<MaxDailyProfitResponse> actualResponse = this.service.getMaxDailyProfit(request);
+        Assert.assertNotNull(actualResponse);
+        Assert.assertNotNull(actualResponse.get(0));
+        Assert.assertNotNull(actualResponse.get(0).getMaxDailyProfitsFromQuandlTable());
+        Assert.assertNotNull(actualResponse.get(0).getMaxDailyProfitsFromQuandlTable().get(0));
+        Assert.assertEquals(expectedDate, actualResponse.get(0).getMaxDailyProfitsFromQuandlTable().get(0).getDate());
+        Assert.assertTrue(expectedMaximumProfit == actualResponse.get(0).getMaxDailyProfitsFromQuandlTable().get(0).getAmountProfit());
     }
 }

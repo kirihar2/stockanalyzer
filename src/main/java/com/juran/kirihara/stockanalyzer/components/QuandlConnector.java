@@ -26,7 +26,8 @@ public class QuandlConnector {
     public ResponseEntity<QuandleTableModel> getWikiTableResponse(QuandlRequest request) {
         try {
             UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(this.wikiApiUrl);
-            builder.queryParam("ticker", request.getTicker());
+            String tickers = String.join(",", request.getTickers());
+            builder.queryParam("ticker", tickers);
             if (request.getStartDate() != null) {
                 builder.queryParam("date.gte", Constants.formatWithDate.format(request.getStartDate()));
             }
