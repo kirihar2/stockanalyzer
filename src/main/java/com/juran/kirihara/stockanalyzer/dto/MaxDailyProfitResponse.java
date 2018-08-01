@@ -5,11 +5,12 @@ import com.juran.kirihara.stockanalyzer.models.MaxDailyProfitFromQuandlTable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MaxDailyProfitResponse {
-    private String ticker;
+public class MaxDailyProfitResponse extends ResponseForTicker {
     private List<MaxDailyProfitFromQuandlTable> maxDailyProfitsFromQuandlTable;
-    private String error;
 
+    public MaxDailyProfitResponse() {
+        super();
+    }
     public List<MaxDailyProfitFromQuandlTable> getMaxDailyProfitsFromQuandlTable() {
         return maxDailyProfitsFromQuandlTable;
     }
@@ -18,19 +19,4 @@ public class MaxDailyProfitResponse {
         this.maxDailyProfitsFromQuandlTable = new ArrayList<>(maxDailyProfitsFromQuandlTable);
     }
 
-    public String getTicker() {
-        return ticker;
-    }
-
-    public void setTicker(String ticker) {
-        this.ticker = ticker;
-    }
-
-    public String getError() {
-        return error;
-    }
-
-    public void setError(String error) {
-        this.error = error;
-    }
 }

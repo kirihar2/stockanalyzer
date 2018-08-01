@@ -8,10 +8,8 @@ import java.util.Map;
 
 import static java.util.Collections.sort;
 
-public class AverageMonthlyPriceResponse {
-    private String ticker;
+public class AverageMonthlyPriceResponse extends ResponseForTicker {
     private List<AverageMonthPriceFromQuandlTable> averageMonthPriceFromQuandlTables;
-    private String error;
 
     public AverageMonthlyPriceResponse() {
         super();
@@ -29,27 +27,11 @@ public class AverageMonthlyPriceResponse {
         setAverageMonthPriceFromQuandlTables(averageMonthlyPrices);
     }
 
-    public String getTicker() {
-        return ticker;
-    }
-
-    public void setTicker(String ticker) {
-        this.ticker = ticker;
-    }
-
     public List<AverageMonthPriceFromQuandlTable> getAverageMonthPriceFromQuandlTables() {
         return averageMonthPriceFromQuandlTables;
     }
 
     public void setAverageMonthPriceFromQuandlTables(List<AverageMonthPriceFromQuandlTable> averageMonthPriceFromQuandlTables) {
         this.averageMonthPriceFromQuandlTables = new ArrayList<>(averageMonthPriceFromQuandlTables);
-    }
-
-    public String getError() {
-        return error;
-    }
-
-    public void setError(String error) {
-        this.error = error;
     }
 }

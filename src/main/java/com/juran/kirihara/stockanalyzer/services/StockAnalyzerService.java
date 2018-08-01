@@ -2,10 +2,7 @@ package com.juran.kirihara.stockanalyzer.services;
 
 import com.juran.kirihara.stockanalyzer.Constants;
 import com.juran.kirihara.stockanalyzer.components.QuandlConnector;
-import com.juran.kirihara.stockanalyzer.dto.AverageMonthlyPriceResponse;
-import com.juran.kirihara.stockanalyzer.dto.MaxDailyProfitResponse;
-import com.juran.kirihara.stockanalyzer.dto.QuandlRequest;
-import com.juran.kirihara.stockanalyzer.dto.WikiTableResponse;
+import com.juran.kirihara.stockanalyzer.dto.*;
 import com.juran.kirihara.stockanalyzer.models.MaxDailyProfitFromQuandlTable;
 import com.juran.kirihara.stockanalyzer.models.QuandleTableEntry;
 import com.juran.kirihara.stockanalyzer.models.QuandleTableModel;
@@ -109,7 +106,7 @@ public class StockAnalyzerService {
         }
     }
 
-    //
+
     /*
      * Since data does not show the time series data for the stock, it is not possible to say that the
      * low happens before stock high price. The best (possible trade) is to compare the buy at open and sell at high
@@ -181,6 +178,11 @@ public class StockAnalyzerService {
         return response;
     }
 
+    public List<BusyDaysResponse> getBusyDays() {
+        List<BusyDaysResponse> response = new ArrayList<>();
+
+        return response;
+    }
     private double calculateMaximumProfit(double maxProfitPotentialFromOpen, double maxProfitPotentialToClose) {
         double ret;
         //To cover case 3 and 4 just select one of the profits
