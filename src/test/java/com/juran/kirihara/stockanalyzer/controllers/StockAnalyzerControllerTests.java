@@ -50,7 +50,7 @@ public class StockAnalyzerControllerTests {
     }
 
     @Test
-    public void testGetAverageMonthlyStockPriceControllerPass() {
+    public void testGetAverageMonthlyStockPriceControllerPass() throws Exception {
         QuandlRequest mockRequest = new QuandlRequest();
         List<AverageMonthlyPriceResponse> expectedResponseList = new ArrayList<>();
         AverageMonthlyPriceResponse expectedResponse = new AverageMonthlyPriceResponse();
@@ -61,7 +61,7 @@ public class StockAnalyzerControllerTests {
     }
 
     @Test
-    public void testGetAverageMonthlyStockPriceControllerWhenServiceThrowsError() {
+    public void testGetAverageMonthlyStockPriceControllerWhenServiceThrowsError() throws Exception {
         QuandlRequest mockRequest = new QuandlRequest();
         AverageMonthlyPriceResponse expectedResponse = new AverageMonthlyPriceResponse();
         expectedResponse.setError("something went wrong in service");
@@ -72,7 +72,7 @@ public class StockAnalyzerControllerTests {
     }
 
     @Test
-    public void testGetMaximumProfitControllerPass() {
+    public void testGetMaximumProfitControllerPass() throws Exception {
         QuandlRequest mockRequest = new QuandlRequest();
         List<MaxDailyProfitResponse> expectedResponseList = new ArrayList<>();
         MaxDailyProfitResponse expectedResponse = new MaxDailyProfitResponse();
@@ -84,7 +84,7 @@ public class StockAnalyzerControllerTests {
     }
 
     @Test
-    public void testGetMaximumProfitControllerWhenServiceThrowsError() {
+    public void testGetMaximumProfitControllerWhenServiceThrowsError() throws Exception {
         QuandlRequest mockRequest = new QuandlRequest();
         MaxDailyProfitResponse expectedResponse = new MaxDailyProfitResponse();
         expectedResponse.setError("something went wrong in service");

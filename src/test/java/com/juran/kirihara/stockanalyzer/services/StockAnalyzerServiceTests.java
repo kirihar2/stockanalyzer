@@ -91,7 +91,7 @@ public class StockAnalyzerServiceTests {
     /* Test to validate the average is correctly calculated for the open and close price
      */
     @Test
-    public void testGetAveragePricesForMonth() throws ParseException {
+    public void testGetAveragePricesForMonth() throws Exception {
         List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
         QuandleTableEntry quandleTableEntry = new QuandleTableEntry();
         quandleTableEntry.setTicker(TICKER);
@@ -103,7 +103,7 @@ public class StockAnalyzerServiceTests {
 
         QuandleTableModel model = new QuandleTableModel();
         model.setEntries(mockQuandleTableEntries);
-        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
+        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(model));
         List<AverageMonthPriceFromQuandlTable> expectedMonthlyPricesForResponse = new ArrayList<>();
         AverageMonthPriceFromQuandlTable expectedMonthlyPrice = new AverageMonthPriceFromQuandlTable();
         expectedMonthlyPrice.setMonth("2018-01");
@@ -152,7 +152,7 @@ public class StockAnalyzerServiceTests {
      *       <--------------------------------->
      */
     @Test
-    public void testCase1and2ForMaximumProfitToReturnEstimatedValues() throws ParseException {
+    public void testCase1and2ForMaximumProfitToReturnEstimatedValues() throws Exception {
         List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
         QuandleTableEntry quandleTableEntry = new QuandleTableEntry();
         quandleTableEntry.setTicker(TICKER);
@@ -164,7 +164,7 @@ public class StockAnalyzerServiceTests {
         mockQuandleTableEntries.add(quandleTableEntry);
         QuandleTableModel model = new QuandleTableModel();
         model.setEntries(mockQuandleTableEntries);
-        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
+        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(model));
         Date expectedDate = Constants.formatWithDate.parse("2018-01-01");
         //Construct expected response
 //        List<MaxDailyProfitResponse> expectedResponse = new ArrayList<>();
@@ -189,7 +189,7 @@ public class StockAnalyzerServiceTests {
     }
 
     @Test
-    public void testCase3ForMaximumProfit() throws ParseException {
+    public void testCase3ForMaximumProfit() throws Exception {
         List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
         QuandleTableEntry quandleTableEntry = new QuandleTableEntry();
         quandleTableEntry.setTicker(TICKER);
@@ -201,7 +201,7 @@ public class StockAnalyzerServiceTests {
         mockQuandleTableEntries.add(quandleTableEntry);
         QuandleTableModel model = new QuandleTableModel();
         model.setEntries(mockQuandleTableEntries);
-        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
+        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(model));
         Date expectedDate = Constants.formatWithDate.parse("2018-01-01");
         double expectedMaximumProfit = 0;//decreasing trend so best profit is not to buy or sell
         List<MaxDailyProfitResponse> actualResponse = this.service.getMaxDailyProfit(request);
@@ -214,7 +214,7 @@ public class StockAnalyzerServiceTests {
     }
 
     @Test
-    public void testCase4ForMaximumProfit() throws ParseException {
+    public void testCase4ForMaximumProfit() throws Exception {
         List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
         QuandleTableEntry quandleTableEntry = new QuandleTableEntry();
         quandleTableEntry.setTicker(TICKER);
@@ -226,7 +226,7 @@ public class StockAnalyzerServiceTests {
         mockQuandleTableEntries.add(quandleTableEntry);
         QuandleTableModel model = new QuandleTableModel();
         model.setEntries(mockQuandleTableEntries);
-        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
+        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(model));
         Date expectedDate = Constants.formatWithDate.parse("2018-01-01");
         double expectedMaximumProfit = 4;//increasing trend so high-low 5-1
         List<MaxDailyProfitResponse> actualResponse = this.service.getMaxDailyProfit(request);
@@ -236,5 +236,31 @@ public class StockAnalyzerServiceTests {
         Assert.assertNotNull(actualResponse.get(0).getMaxDailyProfitsFromQuandlTable().get(0));
         Assert.assertEquals(expectedDate, actualResponse.get(0).getMaxDailyProfitsFromQuandlTable().get(0).getDate());
         Assert.assertTrue(expectedMaximumProfit == actualResponse.get(0).getMaxDailyProfitsFromQuandlTable().get(0).getAmountProfit());
+    }
+
+    //Test exception handling
+    @Test(expected = Exception.class)
+    public void getMonthlyAverageHandleQuandlApiReturnedWithError() throws Exception {
+        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        mockQuandleTableEntries.add(this.mockQuandleTableEntry);
+        QuandleTableModel model = new QuandleTableModel();
+        model.setEntries(mockQuandleTableEntries);
+        model.setError("Something went wrong with Quandl");
+        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
+        List<AverageMonthlyPriceResponse> response = this.service.getAverageMonthlyPrice(request);
+        Assert.assertTrue(response != null);//should never hit here
+    }
+
+    //Test exception handling
+    @Test(expected = Exception.class)
+    public void getMaxDailyProfitHandleQuandlApiReturnedWithError() throws Exception {
+        List<QuandleTableEntry> mockQuandleTableEntries = new ArrayList<>();
+        mockQuandleTableEntries.add(this.mockQuandleTableEntry);
+        QuandleTableModel model = new QuandleTableModel();
+        model.setEntries(mockQuandleTableEntries);
+        model.setError("Something went wrong with Quandl");
+        when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.badRequest().body(model));
+        List<MaxDailyProfitResponse> response = this.service.getMaxDailyProfit(request);
+        Assert.assertTrue(response != null);//should never hit here
     }
 }

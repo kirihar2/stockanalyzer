@@ -35,18 +35,27 @@ public class StockAnalyzerService {
 
         WikiTableResponse response = new WikiTableResponse();
         ResponseEntity<QuandleTableModel> responseFromQuandl = quandlConnector.getWikiTableResponse(request);
-        response.setQuandleTableModel(responseFromQuandl.getBody());
         if (responseFromQuandl.getBody().getError() != null &&
                 !responseFromQuandl.getBody().getError().isEmpty()) {
             String errorMessage = "Error in the api request call to quandl, check inner error";
             logger.error(errorMessage);
             response.setError(errorMessage);
+        } else if (responseFromQuandl.getBody().getEntries() == null || responseFromQuandl.getBody().getEntries().isEmpty()) {
+            String errorMessage = "Error in the api request call to quandl, could not find entries with the given parameters. " +
+                    "Please check dates are valid dates and ticker is a valid stock name";
+            logger.error(errorMessage);
+            response.setError(errorMessage);
         }
+        response.setQuandleTableModel(responseFromQuandl.getBody());
         return response;
     }
 
-    public List<AverageMonthlyPriceResponse> getAverageMonthlyPrice(QuandlRequest request) {
-        QuandleTableModel quandleTableModel = getPrice(request).getQuandleTableModel();
+    public List<AverageMonthlyPriceResponse> getAverageMonthlyPrice(QuandlRequest request) throws Exception {
+        WikiTableResponse wikiTableResponse =
+                getPrice(request);
+        rethrowErrorThrownByQuandlApiIfExists(wikiTableResponse);
+        QuandleTableModel quandleTableModel = wikiTableResponse.getQuandleTableModel();
+
         /*
             Outer map is for the ticker symbol.
             Looks at all dates and places the values for open and close prices into the same bucket
@@ -93,6 +102,13 @@ public class StockAnalyzerService {
         return response;
     }
 
+    private void rethrowErrorThrownByQuandlApiIfExists(WikiTableResponse wikiTableResponse) throws Exception {
+        if (wikiTableResponse.getError() != null && !wikiTableResponse.getError().isEmpty()) {
+            logger.error(wikiTableResponse.getError());
+            throw new Exception(wikiTableResponse.getError());
+        }
+    }
+
     //
     /*
      * Since data does not show the time series data for the stock, it is not possible to say that the
@@ -128,10 +144,12 @@ public class StockAnalyzerService {
      *         open                           close
      *       <--------------------------------->
      */
-    public List<MaxDailyProfitResponse> getMaxDailyProfit(QuandlRequest request) {
+    public List<MaxDailyProfitResponse> getMaxDailyProfit(QuandlRequest request) throws Exception {
         List<MaxDailyProfitResponse> response = new ArrayList<>();
         Map<String, Integer> tickersInTheResponse = new HashMap<>();
-        QuandleTableModel quandleTableModel = getPrice(request).getQuandleTableModel();
+        WikiTableResponse wikiTableResponse = getPrice(request);
+        rethrowErrorThrownByQuandlApiIfExists(wikiTableResponse);
+        QuandleTableModel quandleTableModel = wikiTableResponse.getQuandleTableModel();
         if (quandleTableModel != null) {
             for (QuandleTableEntry entry : quandleTableModel.getEntries()) {
                 String currentTicker = entry.getTicker();
