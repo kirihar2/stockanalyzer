@@ -90,39 +90,58 @@ public class StockAnalyzerService {
 
 
     /*
-     * Since data does not show the time series data for the stock, it is not possible to say that the
-     * low happens before stock high price. The best (possible trade) is to compare the buy at open and sell at high
-     * and buy at low and sell at close assuming we could do multiple trades per stock/day.
-     * Diagram to explain possibilities:
-     *  case 1: low before high :
-     *               In this case the true maximum would be buy at open and at low then sell both at high.
+     *       Since the data does not show the time series data for the stock, it is not possible to say that the
+     *       low necessarily happens before the stock price high. Therefore, we must consider the possibilities
+     *       of the four data points that we have, keeping in mind that we know only the values at the price points,
+     *       and not the order in which they occur.
      *
-     *       open      low       high        close
-     *       <--------------------------------->
+     *       Diagrams to explain possibilities:
      *
-     *  case 2: high before low :
-     *                   In this case the true maximum would be to buy at open and sell at high, then buy at low
-     *                   and sell at close.
+     *           case 1: low before high :
      *
-     *       open      high       low        close
-     *       <--------------------------------->
+     *                     In this case, the maximum profit would be made buying at low and selling at high. However,
+     *                     a profit would also be made buying at open and selling at high, as well as by buying at low
+     *                     and selling at close.
      *
-     *       With the above, we can give the best estimate by using buying at open then selling it at high,
-     *       then buying at low and sell in at close. The if the open is the same value as high and close is the same
-     *       as low then the maximum profit would be 0 because the trend would be decreasing in price.
+     *              open      low       high        close
+     *             <--------------------------------->
      *
-     *   case 3:
-     *          high                            low
-     *         open                           close
-     *       <--------------------------------->
+     *           case 2: high before low :
      *
-     * case 4:
-     *         this could also impact the calculation, because it would double the profit that is possible.
-     *         condition would be if high-open = low-close then maximum would be high-open.
-     *          low                            high
-     *         open                           close
-     *       <--------------------------------->
+     *                      In this case, a (maximum) profit would be made by buying at open and selling at high, then
+     *                      buying at low and selling at close.
+     *
+     *              open      high       low        close
+     *             <--------------------------------->
+     *
+     *                      With the above two cases, we can give the best estimate by buying at open then selling at high,
+     *             then buying at low and selling at close. That way, regardless of the order of occurrence, we would be
+     *             making a profit.
+     *
+     *           case 3: high at open, low at close
+     *
+     *                      If the open price is the same value as the high price, and the close price is the same as the
+     *                      low price, then the possible profit with these given data points would be 0. (It is possible
+     *                      for a higher low and a smaller high value to occur on a smaller time interval within the given
+     *                      interval, but we do not have enough data to say for certain.) Thus, the recommendation would be
+     *                      to not trade.
+     *
+     *                high                            low
+     *               open                           close
+     *             <--------------------------------->
+     *
+     *           case 4: low at open, high at close
+     *
+     *                      If this is the case, we absolutely want to buy at open/low and sell at high/close. The maximum
+     *                      profit would then be achieved.
+     *
+     *                low                            high
+     *               open                           close
+     *             <--------------------------------->
+     *
+     *
      */
+    
     public List<MaxDailyProfitResponse> getMaxDailyProfitNew(QuandlRequest request) throws Exception {
         List<MaxDailyProfitResponse> response = new ArrayList<>();
         Map<String, Integer> tickersInTheResponse = new HashMap<>();
