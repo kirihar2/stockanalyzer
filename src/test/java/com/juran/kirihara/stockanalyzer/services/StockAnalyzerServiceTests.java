@@ -179,19 +179,7 @@ public class StockAnalyzerServiceTests {
         model.setEntries(mockQuandleTableEntries);
         when(quandlConnector.getWikiTableResponse(request)).thenReturn(ResponseEntity.ok().body(model));
         Date expectedDate = Constants.formatWithDate.parse("2018-01-01");
-        //Construct expected response
-//        List<MaxDailyProfitResponse> expectedResponse = new ArrayList<>();
-//        MaxDailyProfitResponse expectedResponseForTicker = new MaxDailyProfitResponse();
-//        List<MaxDailyProfitFromQuandlTable> expectedResponseConstructedFromQuandl = new ArrayList<>();
-//        MaxDailyProfitFromQuandlTable expectedMaxDailyProfitForTicker = new MaxDailyProfitFromQuandlTable();
         double expectedMaximumProfit = 9;//7-2+5-1
-//        expectedMaxDailyProfitForTicker.setAmountProfit(expectedMaximumProfit);
-//        expectedMaxDailyProfitForTicker.setDate(Constants.formatWithDate.parse("2018-01-01"));
-//        expectedResponseConstructedFromQuandl.add(expectedMaxDailyProfitForTicker);
-//        expectedResponseForTicker.setTicker(TICKER);
-//        expectedResponseForTicker.setMaxDailyProfitFromQuandlTable(expectedResponseConstructedFromQuandl);
-//        expectedResponse.add(expectedResponseForTicker);
-
         List<MaxDailyProfitResponse> actualResponse = this.service.getMaxDailyProfitNew(request);
         Assert.assertNotNull(actualResponse);
         Assert.assertNotNull(actualResponse.get(0));
