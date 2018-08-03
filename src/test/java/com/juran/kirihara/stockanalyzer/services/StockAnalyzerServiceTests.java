@@ -126,7 +126,10 @@ public class StockAnalyzerServiceTests {
         List<AverageMonthlyPriceResponse> actualResponse = this.service.getAverageMonthlyPrice(request);
         Assert.assertEquals(expectedResponse.getTicker(), actualResponse.get(0).getTicker());
         Assert.assertNull(actualResponse.get(0).getError());
-        Assert.assertEquals(expectedResponse.getAverageMonthPriceFromQuandlTables().get(0), actualResponse.get(0).getAverageMonthPriceFromQuandlTables().get(0));
+        Assert.assertEquals(expectedResponse.getAverageMonthPriceFromQuandlTables().get(0).getMonth(), actualResponse.get(0).getAverageMonthPriceFromQuandlTables().get(0).getMonth());
+        Assert.assertTrue(expectedResponse.getAverageMonthPriceFromQuandlTables().get(0).getAverage_open() == actualResponse.get(0).getAverageMonthPriceFromQuandlTables().get(0).getAverage_open());
+        Assert.assertTrue(expectedResponse.getAverageMonthPriceFromQuandlTables().get(0).getAverage_close() == actualResponse.get(0).getAverageMonthPriceFromQuandlTables().get(0).getAverage_close());
+
     }
 
 

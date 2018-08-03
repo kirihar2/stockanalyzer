@@ -20,22 +20,6 @@ public class AverageMonthPriceFromQuandlTable {
         setAverage_close(averageForMonth.get(Constants.CLOSE_PRICE_KEY));
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-
-        /* Check if o is an instance of Complex or not
-          "null instanceof [type]" also returns false */
-        if (!(o instanceof AverageMonthPriceFromQuandlTable)) {
-            return false;
-        }
-        AverageMonthPriceFromQuandlTable ave = (AverageMonthPriceFromQuandlTable) o;
-        return this.month.equals(ave.getMonth()) &&
-                this.average_close == ave.getAverage_close() &&
-                this.average_open == ave.getAverage_open();
-    }
 
     public String getMonth() {
         return month;
