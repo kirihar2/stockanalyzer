@@ -62,7 +62,7 @@ public class StockAnalyzerController {
     }
 
     @PostMapping(value = "getMaxDailyProfit", consumes = "application/json", produces = "application/json")
-    @ApiOperation("Request to get daily maximum profit for each ticker")
+    @ApiOperation("Request to calculate which day yields the maximum profit for each ticker")
     public ResponseEntity<List<MaxDailyProfitResponse>> getMaxDailyProfit(
             @ApiParam("Information to get from Database")
             @RequestBody QuandlRequest request
