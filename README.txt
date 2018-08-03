@@ -1,3 +1,6 @@
+Requirements for machine:
+- java 1.8.166
+- Apache Maven 3.5.3
 This spring boot webservice calls the Quandl API to get daily stock data for a given list of stock names and a time frame.
 All data retrieved from Quandl is from the WIKI/PRICES table, however with minor configuration/code changes one can easily extend
 the same functionality across different tables.
@@ -68,7 +71,7 @@ Below highlights the main functionality of this service:
                   <--------------------------------->
 
 
-                  
+
     - Calculate the busy trading days for each stock within the time frame. A day of trading is considered a busy if
     the trade volume for that day is greater than 10% of the average trade volume for that time frame.
 

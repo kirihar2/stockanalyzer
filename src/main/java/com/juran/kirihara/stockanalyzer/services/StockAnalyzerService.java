@@ -74,27 +74,6 @@ public class StockAnalyzerService {
         keys.add(Constants.OPEN_PRICE_KEY);
         keys.add(Constants.CLOSE_PRICE_KEY);
         calculateRunningTotalForGivenKey(quandlTableModel, bucketForMonthsPerTicker, keys, Constants.formatMonth);
-//        if (quandlTableModel != null) {
-//            for (QuandlTableEntry entry : quandlTableModel.getEntries()) {
-//                String currentTicker = entry.getTicker();
-//                if (!bucketForMonthsPerTicker.containsKey(currentTicker)) {
-//                    bucketForMonthsPerTicker.put(currentTicker, new HashMap<>());
-//                }
-//                Map<String, Map<String, Double>> bucketForMonths = bucketForMonthsPerTicker.get(currentTicker);
-//                String monthKey = Constants.formatMonth.format(entry.getDate());
-//                if (!bucketForMonths.containsKey(monthKey)) {
-//                    Map<String, Double> bucketForPrices = new HashMap<>();
-//                    bucketForPrices.put(Constants.OPEN_PRICE_KEY, entry.getOpen());
-//                    bucketForPrices.put(Constants.CLOSE_PRICE_KEY, entry.getClose());
-//                    bucketForPrices.put(Constants.COUNT_KEY, (double) 1);
-//                    bucketForMonths.put(monthKey, bucketForPrices);
-//                } else {
-//                    Map<String, Double> updatedPrices = calculateRunningTotal(bucketForMonths.get(monthKey),keys,entry );
-//                    bucketForMonths.put(monthKey, updatedPrices);
-//                }
-//                bucketForMonthsPerTicker.put(currentTicker, bucketForMonths);
-//            }
-//        }
         List<AverageMonthlyPriceResponse> response = new ArrayList<>();
         for (String ticker : bucketForMonthsPerTicker.keySet()) {
             response.add(new AverageMonthlyPriceResponse(ticker, calculateAverages(bucketForMonthsPerTicker.get(ticker), keys)));
