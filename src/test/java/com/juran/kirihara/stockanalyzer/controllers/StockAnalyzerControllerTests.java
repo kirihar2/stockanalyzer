@@ -74,7 +74,7 @@ public class StockAnalyzerControllerTests {
         List<MaxDailyProfitResponse> expectedResponseList = new ArrayList<>();
         MaxDailyProfitResponse expectedResponse = new MaxDailyProfitResponse();
         expectedResponseList.add(expectedResponse);
-        when(service.getMaxDailyProfit(mockRequest)).thenReturn(expectedResponseList);
+        when(service.getMaxDailyProfitNew(mockRequest)).thenReturn(expectedResponseList);
         ResponseEntity<List<MaxDailyProfitResponse>> response = controller.getMaxDailyProfit(mockRequest);
         Assert.assertSame(expectedResponse, response.getBody().get(0));
     }
@@ -84,7 +84,7 @@ public class StockAnalyzerControllerTests {
         QuandlRequest mockRequest = new QuandlRequest();
         MaxDailyProfitResponse expectedResponse = new MaxDailyProfitResponse();
         expectedResponse.setError("something went wrong in service");
-        when(service.getMaxDailyProfit(any())).thenThrow(new RuntimeException("something went wrong in service"));
+        when(service.getMaxDailyProfitNew(any())).thenThrow(new RuntimeException("something went wrong in service"));
         ResponseEntity<List<MaxDailyProfitResponse>> response = controller.getMaxDailyProfit(mockRequest);
         Assert.assertEquals(expectedResponse.getError(), response.getBody().get(0).getError());
         Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());

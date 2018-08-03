@@ -19,13 +19,16 @@ public class QuandlRequestDeserializer extends JsonDeserializer<QuandlRequest> {
     public QuandlRequest deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         QuandlRequest request = new QuandlRequest();
         JsonNode node = p.getCodec().readTree(p);
-
+        if (node.get("tickers") == null || node.get("tickers").asText().isEmpty()
+                || node.get("startDate") == null || node.get("startDate").asText().isEmpty()
+                || node.get("endDate") == null || node.get("endDate").asText().isEmpty())
+            throw new IOException("Invalid input, missing one or more of input needed for the request. " +
+                    "Please check that startDate, endDate, and tickers is populated");
         String tickersListAsString = node.get("tickers").asText();
         if (!tickersListAsString.isEmpty()) {
             List<String> tickers;
             if (tickersListAsString.contains(",")) {
                 tickers = Arrays.asList(tickersListAsString.split(","));
-
             } else {
                 //Tickers inputted as a single value
                 tickers = new ArrayList<>();

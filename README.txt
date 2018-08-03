@@ -3,8 +3,11 @@ All data retrieved from Quandl is from the WIKI/PRICES table, however with minor
 the same functionality across different tables.
 
 Most of the request and response bodies are explained in swagger-ui.
-If you run the 'StockAnalyzerApplication.class' and open a browser and go to the following link, all controllers and their documentations
-are there. The stock-analyzer-controller contains the main functionlity.
+There are a few ways to run the application, however, the preferred way is to run the jar file in the target/stock-analyzer-1.0.0-SNAPSHOT.jar,
+go to your command line/command prompt and run the following command. (Assuming that you are in the same directory as the jar file above, whether
+copying to a different directory or etc.)
+
+    java -jar stock-analyzer-1.0.0-SNAPSHOT.jar
 
 http://localhost:8080/api/v1/swagger-ui.html
 

@@ -144,7 +144,7 @@ public class StockAnalyzerService {
      *         open                           close
      *       <--------------------------------->
      */
-    public List<MaxDailyProfitResponse> getMaxDailyProfit(QuandlRequest request) throws Exception {
+    public List<MaxDailyProfitResponse> getMaxDailyProfitNew(QuandlRequest request) throws Exception {
         List<MaxDailyProfitResponse> response = new ArrayList<>();
         Map<String, Integer> tickersInTheResponse = new HashMap<>();
         WikiTableResponse wikiTableResponse = getPrice(request);
@@ -155,28 +155,29 @@ public class StockAnalyzerService {
             for (QuandlTableEntry entry : quandlTableModel.getEntries()) {
                 String currentTicker = entry.getTicker();
                 MaxDailyProfitResponse tickerMaxDailyProfit;
-                MaxDailyProfitFromQuandlTable maxDailyProfitToAdd = new MaxDailyProfitFromQuandlTable();
-                List<MaxDailyProfitFromQuandlTable> maxDailyProfitFromQuandlTables;
                 if (!tickersInTheResponse.containsKey(currentTicker)) {
                     tickersInTheResponse.put(currentTicker, response.size());
                     tickerMaxDailyProfit = new MaxDailyProfitResponse();
                     tickerMaxDailyProfit.setTicker(currentTicker);
-                    maxDailyProfitFromQuandlTables = new ArrayList<>();
-                    tickerMaxDailyProfit.setMaxDailyProfitsFromQuandlTable(maxDailyProfitFromQuandlTables);
+                    MaxDailyProfitFromQuandlTable maxDailyProfitToAdd = new MaxDailyProfitFromQuandlTable();
+                    maxDailyProfitToAdd.setDate(entry.getDate());
+                    maxDailyProfitToAdd.setAmountProfit(0);
+                    tickerMaxDailyProfit.setMaxDailyProfitFromQuandlTable(maxDailyProfitToAdd);
                     response.add(tickerMaxDailyProfit);
                 }
                 int ind = tickersInTheResponse.get(currentTicker);
                 tickerMaxDailyProfit = response.get(ind);
-                maxDailyProfitFromQuandlTables = tickerMaxDailyProfit.getMaxDailyProfitsFromQuandlTable();
 
-                maxDailyProfitToAdd.setDate(entry.getDate());
                 double maxProfitPotentialFromOpen = entry.getHigh() - entry.getOpen();
                 double maxProfitPotentialToClose = entry.getClose() - entry.getLow();
                 double maxProfit = calculateMaximumProfit(maxProfitPotentialFromOpen, maxProfitPotentialToClose);
-                maxDailyProfitToAdd.setAmountProfit(maxProfit);
-                maxDailyProfitFromQuandlTables.add(maxDailyProfitToAdd);
-                tickerMaxDailyProfit.setMaxDailyProfitsFromQuandlTable(maxDailyProfitFromQuandlTables);
-                response.set(ind, tickerMaxDailyProfit);
+                MaxDailyProfitFromQuandlTable currentMaximumDailyPrice = tickerMaxDailyProfit.getMaxDailyProfitFromQuandlTable();
+                if (currentMaximumDailyPrice.getAmountProfit() < maxProfit) {
+                    currentMaximumDailyPrice.setDate(entry.getDate());
+                    currentMaximumDailyPrice.setAmountProfit(maxProfit);
+                    tickerMaxDailyProfit.setMaxDailyProfitFromQuandlTable(currentMaximumDailyPrice);
+                    response.set(ind, tickerMaxDailyProfit);
+                }
             }
         }
         return response;

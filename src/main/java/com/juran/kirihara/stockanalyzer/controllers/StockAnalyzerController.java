@@ -68,7 +68,7 @@ public class StockAnalyzerController {
             @RequestBody QuandlRequest request
     ) {
         try {
-            return ResponseEntity.ok().body(service.getMaxDailyProfit(request));
+            return ResponseEntity.ok().body(service.getMaxDailyProfitNew(request));
         } catch (Exception e) {
             List<MaxDailyProfitResponse> errorResponse = new ArrayList<>();
             MaxDailyProfitResponse error = new MaxDailyProfitResponse();
